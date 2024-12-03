@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kamera Görüntüsü</title>
+  {% load static %}
+  <!-- CSS Dosyasını Dahil Et -->
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+
+  <br>
+
+  <video id="camera1" autoplay playsinline></video>
+
+  <br>
+
+  <div>
+    <div>
+      <video id="camera2" autoplay playsinline></video>
+      <video id="camera3" autoplay playsinline></video>
+      <video id="camera4" autoplay playsinline></video>
+    </div>
+
+    <div>
+      &emsp;&emsp;&emsp;
+      ham görüntü &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;
+      ayna görüntü &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;
+      marklı görüntü olacak
+    </div>
+  </div>
+
+
+  <script src="{% static 'js/script.js' %}"></script>
+</body>
+</html>
