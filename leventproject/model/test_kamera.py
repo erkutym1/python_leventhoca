@@ -37,7 +37,7 @@ num_classes = len(LABELS)
 model = ASLLandmarkModel(input_size, num_classes).to(device)
 
 # Modeli yükle
-MODEL_PATH = "landmark_model.pth"
+MODEL_PATH = "/Users/elmasgunes/Desktop/python_leventhoca/leventproject/model/landmark_model.pth"
 model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
 model.eval()
 print("Model başarıyla yüklendi.")
