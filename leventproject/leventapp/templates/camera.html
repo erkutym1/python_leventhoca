@@ -3,57 +3,88 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ASL Tahmin</title>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+  <title>El Hareketi Tanıma</title>
+  {% load static %}
+    <style>
+    body {
+      background-image: url("{% static 'images/arkaplan.jpg' %}");
+
+      background-repeat: no-repeat;
+      background-position: center;
+    }
+  </style>
 </head>
 <body>
-  <h1>El Hareketi Tanıma</h1>
-  <video id="camera" autoplay playsinline></video>
-  <h2 id="prediction">Tahmin: Yok</h2>
+  <div style="display: flex">
+    &emsp;&emsp;
+    <h1 style>Ham Görüntü</h1>
+    &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;
+    &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;
+    &emsp;&emsp;&emsp;&emsp;&nbsp;
+    <h1>İşlenmiş Görüntü</h1>
+  </div>
+  <div style="display: flex">
+    &emsp;&emsp;
+    <video id="camera" autoplay playsinline style="width: 40%"></video>
+    &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;
+    <img id="resultImage" alt="Görüntü burada görünecek">
+  </div>
+
+
+
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
+
+
+
+  <div>
+    <img src="{% static 'images/bant.png' %}" style="width: 100%">
+  </div>
+
+
 
   <script>
     async function startCamera() {
       const video = document.getElementById('camera');
       video.width = 640;
       video.height = 480;
-
-      // Kamera akışını al
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
       video.srcObject = stream;
     }
 
-    startCamera();
-
-    // Kamera görüntüsünü bir süre sonra server'a gönderip yanıtı al
-    async function getPrediction() {
+    async function captureAndSend() {
       const video = document.getElementById('camera');
       const canvas = document.createElement('canvas');
-      canvas.width = video.width;
-      canvas.height = video.height;
+      canvas.width = video.width
+      canvas.height = video.height
       const ctx = canvas.getContext('2d');
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
       const imageData = canvas.toDataURL('image/jpeg');
 
-      // AJAX ile Python backend'ine veri gönderme
-      const response = await fetch('/predict/', {
+      const response = await fetch('/process/', {
         method: 'POST',
-        body: JSON.stringify({ image: imageData }),
+        body: `image=${encodeURIComponent(imageData)}`,
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/x-www-form-urlencoded'
         }
       });
 
       if (response.ok) {
         const result = await response.json();
-        document.getElementById('prediction').innerText = `Tahmin: ${result.prediction}`;
+        document.getElementById('resultImage').src = result.image;
       }
 
-      // Tekrar çağır
-      setTimeout(getPrediction, 1000);
+      setTimeout(captureAndSend, 1); // Tekrar çağır
     }
 
-    getPrediction();
+    startCamera();
+    captureAndSend();
   </script>
 </body>
 </html>

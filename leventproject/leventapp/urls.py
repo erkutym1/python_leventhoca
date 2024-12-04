@@ -3,6 +3,6 @@ from . import views
 
 urlpatterns = [
     path('', views.camera_view, name='camera_view'),
-    path('predict/', views.predict_view(), name='predict_view'),
+    path('process/', views.process_image, name='process_image'),
 
 ]
