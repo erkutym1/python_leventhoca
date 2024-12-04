@@ -3,35 +3,57 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kamera Görüntüsü</title>
-  {% load static %}
-  <!-- CSS Dosyasını Dahil Et -->
-  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <title>ASL Tahmin</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
 </head>
 <body>
+  <h1>El Hareketi Tanıma</h1>
+  <video id="camera" autoplay playsinline></video>
+  <h2 id="prediction">Tahmin: Yok</h2>
 
-  <br>
+  <script>
+    async function startCamera() {
+      const video = document.getElementById('camera');
+      video.width = 640;
+      video.height = 480;
 
-  <video id="camera1" autoplay playsinline></video>
+      // Kamera akışını al
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+      video.srcObject = stream;
+    }
 
-  <br>
+    startCamera();
 
-  <div>
-    <div>
-      <video id="camera2" autoplay playsinline></video>
-      <video id="camera3" autoplay playsinline></video>
-      <video id="camera4" autoplay playsinline></video>
-    </div>
+    // Kamera görüntüsünü bir süre sonra server'a gönderip yanıtı al
+    async function getPrediction() {
+      const video = document.getElementById('camera');
+      const canvas = document.createElement('canvas');
+      canvas.width = video.width;
+      canvas.height = video.height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    <div>
-      &emsp;&emsp;&emsp;
-      ham görüntü &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;
-      ayna görüntü &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;
-      marklı görüntü olacak
-    </div>
-  </div>
+      const imageData = canvas.toDataURL('image/jpeg');
 
+      // AJAX ile Python backend'ine veri gönderme
+      const response = await fetch('/predict/', {
+        method: 'POST',
+        body: JSON.stringify({ image: imageData }),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
 
-  <script src="{% static 'js/script.js' %}"></script>
+      if (response.ok) {
+        const result = await response.json();
+        document.getElementById('prediction').innerText = `Tahmin: ${result.prediction}`;
+      }
+
+      // Tekrar çağır
+      setTimeout(getPrediction, 1000);
+    }
+
+    getPrediction();
+  </script>
 </body>
 </html>

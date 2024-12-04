@@ -133,3 +133,8 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+import os
+
+# BASE_DIR zaten settings.py içinde tanımlıdır, projedeki ana dizini temsil eder
+MODEL_PATH = os.path.join(BASE_DIR, 'leventapp', 'landmark_model.pth')

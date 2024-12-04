@@ -1,33 +1,45 @@
-const videoElement1 = document.getElementById('camera1');
-const videoElement2 = document.getElementById('camera2');
-const videoElement3 = document.getElementById('camera3');
-const videoElement4 = document.getElementById('camera4');
+const videoElement = document.getElementById("camera");
+const canvasElement = document.getElementById("outputCanvas");
+const ctx = canvasElement.getContext("2d");
 
 async function startCamera() {
-  try {
-    // Kamera erişimi için izin al
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-    videoElement1.srcObject = stream;
-    videoElement1.style.transform = 'scaleX(-1)';
-    videoElement1.style.width = '30%';
+  const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+  videoElement.srcObject = stream;
 
-    videoElement2.srcObject = stream;
-    videoElement2.style.width = '22%';
+  const sendFrame = async () => {
+    const canvas = document.createElement("canvas");
+    canvas.width = videoElement.videoWidth;
+    canvas.height = videoElement.videoHeight;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
 
-    videoElement3.srcObject = stream;
-    videoElement3.style.transform = 'scaleX(-1)';
-    videoElement3.style.width = '22%';
+    const imageData = canvas.toDataURL("image/jpeg").split(",")[1]; // Base64 format
 
-    videoElement4.srcObject = stream;
-    videoElement4.style.transform = 'scaleX(-1)';
-    videoElement4.style.width = '22%';
+    // POST isteği
+    try {
+      const response = await fetch("/process-frame/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ image: imageData }),
+      });
 
+      const result = await response.json();
+      if (result.status === "success") {
+        const img = new Image();
+        img.src = `data:image/jpeg;base64,${result.image}`;
+        img.onload = () => {
+          ctx.drawImage(img, 0, 0, canvasElement.width, canvasElement.height);
+        };
+      }
+    } catch (error) {
+      console.error("Hata:", error);
+    }
+    requestAnimationFrame(sendFrame);
+  };
 
-  } catch (error) {
-    console.error("Kamera erişimi sağlanamadı:", error);
-    alert("Kamera erişimi sağlanamadı. Lütfen tarayıcı ayarlarını kontrol edin.");
-  }
+  sendFrame();
 }
 
-// Sayfa yüklendiğinde kamerayı başlat
-window.addEventListener('load', startCamera);
+document.addEventListener("DOMContentLoaded", startCamera);
