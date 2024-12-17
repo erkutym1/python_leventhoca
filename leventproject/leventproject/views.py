@@ -69,37 +69,37 @@ def process_image(request):
         # Görüntüyü aç
         np_array = np.frombuffer(image, dtype=np.uint8)
         frame = cv2.imdecode(np_array, cv2.IMREAD_COLOR)
+        frame1 = frame.copy()
+
+        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
         # Görüntüyü yatay olarak çevir (flip)
-        frame = cv2.flip(frame, 1)
+        frame_flipped = cv2.flip(rgb_frame, 1)
 
-        # Görüntüyü RGB formatına çevir
-        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        result = hands.process(rgb_frame)
+        frame = frame_flipped.copy()
 
-
-        LABELS = [chr(i) for i in range(65, 91)]  # A-Z
-        input_size = 21 * 3  # 21 landmark (x, y, z)
-
+        # Modeli yükle
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         num_classes = len(LABELS)
         model = ASLLandmarkModel(input_size, num_classes).to(device)
-
         MODEL_PATH = settings.MODEL_PATH
         model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
         model.eval()
         print("Model başarıyla yüklendi.")
 
         previous_landmarks = None
-        stationary_start_time = None
+        predicted_label = ""
 
+        result = hands.process(frame)
+
+        # El işaretlerini tanı
         if result.multi_hand_landmarks:
             for hand_landmarks in result.multi_hand_landmarks:
                 # Landmark koordinatlarını çıkar
                 landmarks = [[lm.x, lm.y, lm.z] for lm in hand_landmarks.landmark]
 
+                # El işaretini tahmin et
                 predicted_label = predict_landmarks([coord for lm in landmarks for coord in lm], model, device)
-                cv2.putText(frame, f"Tahmin: {predicted_label}", (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 1,(0, 255, 0), 2)
 
                 # Landmarkları çiz
                 mp_drawing.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
@@ -107,12 +107,25 @@ def process_image(request):
         else:
             cv2.putText(frame, "El algilanamadi!", (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
             previous_landmarks = None  # Landmarkları sıfırla
-            stationary_start_time = None
 
+        _, buffer_flipped = cv2.imencode('.jpg', frame_flipped)
+        encoded_flipped = base64.b64encode(buffer_flipped).decode('utf-8')
 
-        # Sonuç görüntüsünü base64 formatına çevir
-        _, buffer = cv2.imencode('.jpg', frame)
-        encoded_result = base64.b64encode(buffer).decode('utf-8')
+        _, buffer_rgb = cv2.imencode('.jpg', rgb_frame)
+        encoded_rgb = base64.b64encode(buffer_rgb).decode('utf-8')
 
-        return JsonResponse({'image': f'data:image/jpeg;base64,{encoded_result}'})
+        # Marker görüntüsünü base64'e çevir
+        _, buffer_marker = cv2.imencode('.jpg', frame)
+        encoded_marker = base64.b64encode(buffer_marker).decode('utf-8')
+
+        return JsonResponse({
+            'resultImage2': f'data:image/jpeg;base64,{encoded_rgb}',  # RGB görüntü
+            'resultImage3': f'data:image/jpeg;base64,{encoded_flipped}',  # Yatay flip sonrası
+            'resultImage4': f'data:image/jpeg;base64,{encoded_marker}',  # Marker görüntü
+            'tahmin': predicted_label  # El işareti tahmini
+        })
     return JsonResponse({'error': 'Invalid request method'}, status=400)
+
+
+
+

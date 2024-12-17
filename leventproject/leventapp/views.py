@@ -59,6 +59,7 @@ def predict_landmarks(landmarks, model, device):
 
 
 @csrf_exempt  # CSRF korumasını geçici olarak devre dışı bırakıyoruz (güvenliğe dikkat edin!)
+@csrf_exempt  # CSRF korumasını geçici olarak devre dışı bırakıyoruz (güvenliğe dikkat edin!)
 def process_image(request):
     if request.method == 'POST':
         # Görüntüyü al
@@ -71,12 +72,11 @@ def process_image(request):
         frame = cv2.imdecode(np_array, cv2.IMREAD_COLOR)
 
         # Görüntüyü yatay olarak çevir (flip)
-        frame = cv2.flip(frame, 1)
+        frame_flipped = cv2.flip(frame, 1)
 
         # Görüntüyü RGB formatına çevir
         rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         result = hands.process(rgb_frame)
-
 
         LABELS = [chr(i) for i in range(65, 91)]  # A-Z
         input_size = 21 * 3  # 21 landmark (x, y, z)
@@ -109,10 +109,16 @@ def process_image(request):
             previous_landmarks = None  # Landmarkları sıfırla
             stationary_start_time = None
 
+        # Sonuç görüntülerini base64 formatına çevir
+        _, buffer_flipped = cv2.imencode('.jpg', frame_flipped)
+        encoded_flipped = base64.b64encode(buffer_flipped).decode('utf-8')
 
-        # Sonuç görüntüsünü base64 formatına çevir
-        _, buffer = cv2.imencode('.jpg', frame)
-        encoded_result = base64.b64encode(buffer).decode('utf-8')
+        _, buffer_frame = cv2.imencode('.jpg', frame)
+        encoded_frame = base64.b64encode(buffer_frame).decode('utf-8')
 
-        return JsonResponse({'image': f'data:image/jpeg;base64,{encoded_result}'})
+        return JsonResponse({
+            'resultImage1': f'data:image/jpeg;base64,{encoded_flipped}',  # İlk işlem sonucu
+            'resultImage2': f'data:image/jpeg;base64,{encoded_frame}'  # Yatay flip sonrası
+        })
     return JsonResponse({'error': 'Invalid request method'}, status=400)
+
