@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SQLite Interaction</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <form id="dataForm" method="post">
+        {% csrf_token %}
+        <label for="inputText">Metin Giriniz:</label><br>
+        <input type="text" id="inputText" name="inputText">
+        <button type="submit">Kaydet</button>
+    </form>
+
+    <h3>Veritabanındaki İçerik:</h3>
+    <textarea id="databaseContent" readonly style="width: 100%; height: 200px;"></textarea>
+
+    <script>
+        $(document).ready(function () {
+            // Fetch initial content
+            fetchContent();
+
+            // Handle form submission
+            $('#dataForm').on('submit', function (event) {
+                event.preventDefault();
+                const inputText = $('#inputText').val();
+
+                $.ajax({
+                    url: '{% url "save_data" %}',
+                    method: 'POST',
+                    data: {
+                        'inputText': inputText,
+                        'csrfmiddlewaretoken': '{{ csrf_token }}'
+                    },
+                    success: function () {
+                        $('#inputText').val('');
+                        fetchContent();
+                    }
+                });
+            });
+
+            // Fetch database content and update the second textbox
+            function fetchContent() {
+                $.ajax({
+                    url: '{% url "fetch_data" %}',
+                    method: 'GET',
+                    success: function (data) {
+                        $('#databaseContent').val(data);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
