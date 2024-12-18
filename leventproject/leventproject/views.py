@@ -129,3 +129,38 @@ def process_image(request):
 
 
 
+
+
+@csrf_exempt
+def oyun_sayfasi(request):
+    return render(request, 'oyun_sayfasi.html')
+
+@csrf_exempt
+def camera_page(request):
+    return render(request, 'camera.html')
+
+@csrf_exempt
+def foto_page(request):
+    return render(request, 'foto_page.html')
+
+
+
+
+from django.http import JsonResponse
+from django.shortcuts import render
+from .models import TextModel  # textmodel yerine TextModel
+
+def save_data(request):
+    if request.method == 'POST':
+        texts = request.POST.get('inputText')
+        if texts:
+            TextModel.objects.create(texts=texts)
+        return JsonResponse({'status': 'success'})
+    return JsonResponse({'status': 'error'}, status=400)
+
+def fetch_data(request):
+    data = TextModel.objects.all().values_list('texts', flat=True)
+    content = "\n".join(data)  # Convert the list of texts into a single string
+    return JsonResponse(content, safe=False)
+
+
