@@ -5,90 +5,57 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>El Hareketi Tanıma</title>
   {% load static %}
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
   <style>
+
     body {
       background-image: url("{% static 'images/arkaplan.jpg' %}");
       background-repeat: no-repeat;
       background-position: center;
       font-family: Arial, sans-serif;
     }
-    .container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      margin-top: 20px;
-    }
-
-    .video-container {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-top: 10px;
-    }
-
-    video {
-      border: 2px solid #000;
-    }
-
-    .result-container {
-      display: flex;
-      justify-content: space-around;
-      width: 80%;
-      margin-top: 20px;
-    }
-
-    img {
-      width: 160px;
-      height: 120px;
-      object-fit: contain;
-      margin: 1px;
-    }
-
-    .tahmin {
-      font-size: 24px;
-      margin-top: 20px;
-      color: #007BFF;
-    }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>El Hareketi Tanıma</h1>
-    <div class="video-container">
-      <video id="camera" autoplay playsinline style="width: 40%; height: 40%"></video>
+    <h1 style="margin-bottom: 0">El Hareketi Tanıma</h1>
+    <div class="video-container" style="margin-bottom: 0">
+
+      <button onclick="location.href='{% url 'oyun_sayfasi' %}'"  style="margin-bottom: 0">OYUN</button>
+
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+      <video id="camera" autoplay playsinline style="width: 35%; height: 350%" style="margin-bottom: 0"></video>
+
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+      <button onclick="location.href='{% url 'foto_page' %}'" style="margin-bottom: 0; margin-right: 0">FOTO</button>
+
     </div>
 
-    <div class="result-container">
+    <div class="result-container" style="margin-top: 0">
       <div>
-        <h2>BGR to RGB</h2>
-        <img id="resultImage2" alt="İşlenmiş Görüntü" />
+        <h2 style="margin-bottom: 0px">BGR to RGB</h2>
+        <img id="resultImage2" alt="İşlenmiş Görüntü"  style="margin-bottom: 0"/>
       </div>
       <div>
-        <h2>Flipped</h2>
-        <img id="resultImage3" alt="RGB Görüntü" />
+        <h2 style="margin-bottom: 0px">Flipped</h2>
+        <img id="resultImage3" alt="RGB Görüntü"  style="margin-bottom: 0"/>
       </div>
       <div>
-        <h2>Marker</h2>
-        <img id="resultImage4" alt="Marker Görüntü" />
+        <h2 style="margin-bottom: 0px">Marker</h2>
+        <img id="resultImage4" alt="Marker Görüntü"  style="margin-bottom: 0"/>
       </div>
     </div>
 
-    <div class="tahmin" id="tahmin">Tahmin: -</div>
+    <div class="tahmin" id="tahmin" style="margin-bottom: 0">Tahmin: -</div>
 
     <div>
-    <img src="{% static 'images/bant.png' %}" style="width: 100%">
-  </div>
-  </div>
-
-
-  <div>
-    <button onclick="location.href='{% url 'oyun_sayfasi' %}'">OYUN</button>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      <img src="{% static 'images/bant.png' %}" style="width: 90%; margin-bottom: 0">
+    </div>
   </div>
 
-  <div>
-    <button onclick="location.href='{% url 'foto_page' %}'">FOTO</button>
-  </div>
 
 
 
