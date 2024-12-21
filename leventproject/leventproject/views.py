@@ -130,11 +130,6 @@ def process_image(request):
 
 
 
-
-@csrf_exempt
-def oyun_sayfasi(request):
-    return render(request, 'oyun_sayfasi.html')
-
 @csrf_exempt
 def camera_page(request):
     return render(request, 'camera.html')
@@ -162,5 +157,108 @@ def fetch_data(request):
     data = TextModel.objects.all().values_list('texts', flat=True)
     content = "\n".join(data)  # Convert the list of texts into a single string
     return JsonResponse(content, safe=False)
+
+
+import json
+from django.views.decorators.csrf import csrf_exempt
+
+
+import os
+import uuid
+import base64
+import cv2
+import numpy as np
+import torch
+from django.http import JsonResponse
+from .models import TextModel
+from django.conf import settings
+
+import os
+import uuid
+import base64
+import cv2
+import numpy as np
+import torch
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from .models import TextModel
+from django.conf import settings
+
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import cv2
+import numpy as np
+import uuid
+import os
+import torch
+from .models import TextModel
+from django.conf import settings
+
+@csrf_exempt
+def upload_image_process(request):
+    if request.method == 'POST':
+        # Check if the 'image' is present in the request files
+        if 'image' not in request.FILES:
+            return JsonResponse({'error': 'No image provided'}, status=400)
+
+        # Get the image from the request
+        image = request.FILES['image']
+
+        # Read the image and process it
+        np_array = np.frombuffer(image.read(), dtype=np.uint8)
+        frame = cv2.imdecode(np_array, cv2.IMREAD_COLOR)
+
+        # Process the image (flip horizontally, etc.)
+        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        frame_flipped = cv2.flip(rgb_frame, 1)
+
+        # Load the model
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        model = ASLLandmarkModel(input_size, len(LABELS)).to(device)
+        model.load_state_dict(torch.load(settings.MODEL_PATH, map_location=device))
+        model.eval()
+
+        result = hands.process(frame)
+
+        predicted_label = "tahmin yapılamadı"
+        if result.multi_hand_landmarks:
+            for hand_landmarks in result.multi_hand_landmarks:
+                landmarks = [[lm.x, lm.y, lm.z] for lm in hand_landmarks.landmark]
+                predicted_label = predict_landmarks([coord for lm in landmarks for coord in lm], model, device)
+
+        # Create a file name for the image
+        image_name = f"{uuid.uuid4()}.jpg"
+        image_path = os.path.join(settings.MEDIA_ROOT, 'uploads', image_name)
+
+        # Save the image to the disk
+        _, buffer = cv2.imencode('.jpg', frame)
+        with open(image_path, 'wb') as f:
+            f.write(buffer.tobytes())
+
+        # Save the record in the database
+        text_model = TextModel.objects.create(texts=predicted_label, image_path=image_path)
+
+        # Return the response with image URL, prediction, and the ID
+        image_url = settings.MEDIA_URL + 'uploads/' + image_name
+
+        return JsonResponse({
+            'resultImage': image_url,  # Full URL of the processed image
+            'tahmin': predicted_label,  # Prediction result
+            'id': text_model.id  # ID of the saved record
+        })
+
+    return JsonResponse({'error': 'Invalid request method'}, status=400)
+
+
+def fetch_previous_images(request):
+    # Fetch previous records from the database, ordered by ID in descending order
+    records = TextModel.objects.all().order_by('-id').values('id', 'texts', 'image_path')
+
+    # Construct full URLs for the image paths
+    for record in records:
+        record['image_path'] = settings.MEDIA_URL + 'uploads/' + os.path.basename(record['image_path'])
+
+    return JsonResponse(list(records), safe=False)
+
 
 

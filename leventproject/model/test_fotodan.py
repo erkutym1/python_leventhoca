@@ -71,7 +71,7 @@ def predict_image(image_path, model, device):
 
 
 # Test edilecek görsel
-TEST_IMAGE_PATH = "testfoto.jpg"
+TEST_IMAGE_PATH = "2bfhg8x.jpg"
 
 # Tahmin yap
 predicted_label = predict_image(TEST_IMAGE_PATH, model, device)

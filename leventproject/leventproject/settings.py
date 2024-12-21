@@ -142,3 +142,6 @@ import os
 
 # BASE_DIR zaten settings.py içinde tanımlıdır, projedeki ana dizini temsil eder
 MODEL_PATH = os.path.join(BASE_DIR, 'leventapp', 'landmark_model.pth')
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

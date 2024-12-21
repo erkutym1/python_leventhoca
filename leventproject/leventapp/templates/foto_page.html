@@ -4,66 +4,108 @@
     <meta charset="UTF-8">
     <title>FOTODAN İŞLEME</title>
     {% load static %}
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <!-- style.css dosyasını yükle -->
+    <link rel="stylesheet" href="{% static 'css/style2.css' %}">
 </head>
 <body>
-    <div style="display: flex; justify-content: space-between; margin-left: 20%; margin-right: 20%; margin-top: 1%; margin-bottom: 1%">
+    <div style="display: flex; justify-content: space-between; margin-left: 4%; margin-right: 41.5%; margin-top: 1%; margin-bottom: 1%">
         <div>
             <button onclick="location.href='{% url 'camera_page' %}'">ANASAYFA</button>
         </div>
 
-        <form class="file-upload-form">
-          <label for="file" class="file-upload-label">
-            <div class="file-upload-design">
-              <svg viewBox="0 0 640 512" height="1em">
-                <path
-                  d="M144 480C64.5 480 0 415.5 0 336c0-62.8 40.2-116.2 96.2-135.9c-.1-2.7-.2-5.4-.2-8.1c0-88.4 71.6-160 160-160c59.3 0 111 32.2 138.7 80.2C409.9 102 428.3 96 448 96c53 0 96 43 96 96c0 12.2-2.3 23.8-6.4 34.6C596 238.4 640 290.1 640 352c0 70.7-57.3 128-128 128H144zm79-217c-9.4 9.4-9.4 24.6 0 33.9s24.6 9.4 33.9 0l39-39V392c0 13.3 10.7 24 24 24s24-10.7 24-24V257.9l39 39c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-80-80c-9.4-9.4-24.6-9.4-33.9 0l-80 80z"
-                ></path>
-              </svg>
-              <p>Drag and Drop</p>
-              <p>or</p>
-              <span class="browse-button">Browse file</span>
-            </div>
-            <input id="file" type="file" accept="image/jpeg, image/png" onchange="previewImage(event)" />
-          </label>
+        <!-- Dosya Yükleme Formu -->
+        <form class="file-upload-form" enctype="multipart/form-data">
+            <label for="file" class="file-upload-label">
+                <div class="file-upload-design">
+                    <svg viewBox="0 0 640 512" height="1em">
+                        <path d="M144 480C64.5 480 0 415.5 0 336c0-62.8 40.2-116.2 96.2-135.9c-.1-2.7-.2-5.4-.2-8.1c0-88.4 71.6-160 160-160c59.3 0 111 32.2 138.7 80.2C409.9 102 428.3 96 448 96c53 0 96 43 96 96c0 12.2-2.3 23.8-6.4 34.6C596 238.4 640 290.1 640 352c0 70.7-57.3 128-128 128H144zm79-217c-9.4 9.4-9.4 24.6 0 33.9s24.6 9.4 33.9 0l39-39V392c0 13.3 10.7 24 24 24s24-10.7 24-24V257.9l39 39c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-80-80c-9.4-9.4-24.6-9.4-33.9 0l-80 80z"></path>
+                    </svg>
+                    <p>Drag and Drop</p>
+                    <p>or</p>
+                    <span class="browse-button">Browse file</span>
+                </div>
+                <input id="file" type="file" accept="image/jpeg, image/png" onchange="uploadImage(event)" />
+            </label>
         </form>
-
-        <div>
-            <button onclick="location.href='{% url 'oyun_sayfasi' %}'">OYUN</button>
-        </div>
-
     </div>
 
-    <div style="display: flex" id="preview">
-        TEST YAZISI
+    <br><br>
+
+    <div id="previousImages">
+        <!-- Önceki fotoğraflar buraya yüklenecek -->
     </div>
 
+    <!-- JavaScript -->
     <script>
-        function previewImage(event) {
-        const file = event.target.files[0];
-        const previewDiv = document.getElementById('preview');
+        async function uploadImage(event) {
+            const file = event.target.files[0];
 
-        if (file) {
+            // Dosya Türü Kontrolü
             const validTypes = ['image/jpeg', 'image/png'];
             if (!validTypes.includes(file.type)) {
                 alert('Lütfen yalnızca JPG veya PNG dosyası yükleyin.');
-                event.target.value = ''; // Dosya seçimini sıfırlama
                 return;
             }
 
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                previewDiv.innerHTML = `<img src="${e.target.result}" alt="Uploaded Image">`;
-            };
-            reader.readAsDataURL(file);
+            // Form-data oluştur
+            const formData = new FormData();
+            formData.append('image', file);  // Dosyayı form-data olarak ekle
+
+            // Sunucuya Gönderme
+            try {
+                const response = await fetch('/upload_image_process/', {
+                    method: 'POST',
+                    body: formData,  // FormData ile dosya gönder
+                });
+
+                if (response.ok) {
+                    // Sayfayı yenileyerek geçmiş fotoğrafları güncelle
+                    location.reload(); // Sayfa yenileniyor
+                } else {
+                    alert('Sunucuda bir hata oluştu.');
+                }
+            } catch (error) {
+                console.error('Hata:', error);
+                alert('Bir hata meydana geldi.');
             }
         }
 
+        async function fetchPreviousImages() {
+            const response = await fetch('/fetch_previous_images/');
+            const data = await response.json();
 
+            const previousImagesDiv = document.getElementById('previousImages');
+            previousImagesDiv.innerHTML = '';  // Önceki verileri temizle
+
+            data.forEach((record, index) => {
+                const recordDiv = document.createElement('div');
+                recordDiv.classList.add('previous-record');
+
+                const img = document.createElement('img');
+                img.src = record.image_path;  // Görselin yolu
+                img.alt = 'Uploaded Image';
+                img.classList.add('preview-image');
+
+                // Apply large image class to the newest image (index 0)
+                if (index === 0) {
+                    img.classList.add('large-image');
+                }
+
+                const p = document.createElement('p');
+                p.textContent = `Tahmin: ${record.texts}`;
+
+                // Görsel ve tahmini bir arada hizalamak
+                const div = document.createElement('div');
+                div.classList.add('image-tahmin-container');
+                div.appendChild(img);
+                div.appendChild(p);
+
+                recordDiv.appendChild(div);
+                previousImagesDiv.appendChild(recordDiv);
+            });
+        }
+
+        fetchPreviousImages();
     </script>
-
-
-
-
 </body>
 </html>
